@@ -213,7 +213,7 @@ contract VaultMultiplexer is VaultController, IVaultMultiplexer, ReentrancyGuard
         UserInfo storage userInfo = users[msg.sender];
 
         if (_token0 == WBNB || _token1 == WBNB) {
-            qMultiplexer.createPosition{value: _token0 == WBNB ? depositAmount[0] : depositAmount[1]}(address(_stakingToken), depositAmount, borrowAmount);
+            qMultiplexer.createPosition{value: depositAmount[1]}(address(_stakingToken), depositAmount, borrowAmount);
         } else {
             qMultiplexer.createPosition(address(_stakingToken), depositAmount, borrowAmount);
         }
@@ -235,13 +235,13 @@ contract VaultMultiplexer is VaultController, IVaultMultiplexer, ReentrancyGuard
         userInfo.debtShare[_token0] = userInfo.debtShare[_token0].sub(debtShareOfPosition(id, _token0));
         userInfo.debtShare[_token1] = userInfo.debtShare[_token1].sub(debtShareOfPosition(id, _token1));
 
-        uint beforeToken0 = _token0 == WBNB ? address(this).balance : IBEP20(_token0).balanceOf(address(this));
-        uint beforeToken1 = _token1 == WBNB ? address(this).balance : IBEP20(_token1).balanceOf(address(this));
+        uint beforeToken0 = IBEP20(_token0).balanceOf(address(this));
+        uint beforeToken1 = IBEP20(_token1).balanceOf(address(this));
 
         qMultiplexer.closePosition(address(_stakingToken), id);
 
-        uint token0Refund = _token0 == WBNB ? address(this).balance.sub(beforeToken0) : IBEP20(_token0).balanceOf(address(this)).sub(beforeToken0);
-        uint token1Refund = _token1 == WBNB ? address(this).balance.sub(beforeToken1) : IBEP20(_token1).balanceOf(address(this)).sub(beforeToken1);
+        uint token0Refund = IBEP20(_token0).balanceOf(address(this)).sub(beforeToken0);
+        uint token1Refund = IBEP20(_token1).balanceOf(address(this)).sub(beforeToken1);
         token0Refund = _calcWithdrawalFee(_token0, token0Refund, positions[id].depositedAt);
         token1Refund = _calcWithdrawalFee(_token1, token1Refund, positions[id].depositedAt);
 
@@ -267,7 +267,7 @@ contract VaultMultiplexer is VaultController, IVaultMultiplexer, ReentrancyGuard
         if (depositAmount[2] > 0) require(depositAmount[2] == _transferIn(address(_stakingToken), msg.sender, depositAmount[2]), "VaultMultiplexer: insufficient stakingToken");
 
         if (_token0 == WBNB || _token1 == WBNB){
-            qMultiplexer.increasePosition{value: _token0 == WBNB ? depositAmount[0] : depositAmount[1]}(address(_stakingToken), id, depositAmount, borrowAmount);
+            qMultiplexer.increasePosition{value: depositAmount[1]}(address(_stakingToken), id, depositAmount, borrowAmount);
         } else {
             qMultiplexer.increasePosition(address(_stakingToken), id, depositAmount, borrowAmount);
         }
@@ -295,15 +295,15 @@ contract VaultMultiplexer is VaultController, IVaultMultiplexer, ReentrancyGuard
         userInfo.debtShare[_token0] = userInfo.debtShare[_token0].sub(debtShareOfPosition(id, _token0));
         userInfo.debtShare[_token1] = userInfo.debtShare[_token1].sub(debtShareOfPosition(id, _token1));
 
-        uint beforeToken0 = _token0 == WBNB ? address(this).balance : IBEP20(_token0).balanceOf(address(this));
-        uint beforeToken1 = _token1 == WBNB ? address(this).balance : IBEP20(_token1).balanceOf(address(this));
+        uint beforeToken0 = IBEP20(_token0).balanceOf(address(this));
+        uint beforeToken1 = IBEP20(_token1).balanceOf(address(this));
         qMultiplexer.reducePosition(address(_stakingToken), id, amount, repayAmount);
 
         userInfo.debtShare[_token0] = userInfo.debtShare[_token0].add(debtShareOfPosition(id, _token0));
         userInfo.debtShare[_token1] = userInfo.debtShare[_token1].add(debtShareOfPosition(id, _token1));
 
-        uint token0Refund = _token0 == WBNB ? address(this).balance.sub(beforeToken0) : IBEP20(_token0).balanceOf(address(this)).sub(beforeToken0);
-        uint token1Refund = _token1 == WBNB ? address(this).balance.sub(beforeToken1) : IBEP20(_token1).balanceOf(address(this)).sub(beforeToken1);
+        uint token0Refund = IBEP20(_token0).balanceOf(address(this)).sub(beforeToken0);
+        uint token1Refund = IBEP20(_token1).balanceOf(address(this)).sub(beforeToken1);
 
         token0Refund = _calcWithdrawalFee(_token0, token0Refund, _depositTimestamp);
         token1Refund = _calcWithdrawalFee(_token1, token1Refund, _depositTimestamp);

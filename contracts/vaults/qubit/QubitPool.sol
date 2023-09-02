@@ -250,7 +250,7 @@ contract QubitPool is BEP20Upgradeable, IQubitPool, RewardsDistributionRecipient
         emit Withdrawn(msg.sender, amount, 0);
     }
 
-    function withdrawAll() public {
+    function withdrawAll() public nonReentrant{
         uint amount = _staking[msg.sender];
         if (amount > 0) {
             withdraw(amount);
